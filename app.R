@@ -3,8 +3,8 @@ library(shiny)
 
 # ---------- 风险计算核心函数 ----------
 calc_risk <- function(hb, alb) {
-  # 线性预测值（使用最终模型系数）
-  lp <- 6.622057 - 0.025892 * hb - 0.117673 * alb
+  # 【修正】线性预测值（使用正文最终模型系数）
+  lp <- 6.1723 - 0.0277 * hb - 0.0984 * alb
   
   # 失代偿概率
   prob <- 1 / (1 + exp(-lp))
@@ -13,7 +13,7 @@ calc_risk <- function(hb, alb) {
   score <- (130 - hb) / 10 * 1.0 + (35 - alb) / 5 * 2.3
   if (score < 0) score <- 0  # 低于参考值不计分
   
-  # 风险分层
+  # 风险分层（基于真实代码：<2.6, 2.6-4.7, >=4.7）
   if (score < 2.6) {
     risk <- "Low Risk"
     color <- "green"
@@ -43,7 +43,7 @@ calc_risk <- function(hb, alb) {
 # ---------- UI 界面设计 ----------
 ui <- fluidPage(
   titlePanel("Decompensation Risk Calculator for HBV-related Cirrhosis"),
-  helpText("Based on Hemoglobin (Hb) and Albumin (ALB) — A Data-Driven Prediction Model"),
+  helpText("Based on Hemoglobin (Hb) and Albumin (ALB) — A Data-Driven Classification Model"),
   
   sidebarLayout(
     sidebarPanel(
@@ -54,7 +54,8 @@ ui <- fluidPage(
       actionButton("calc", "Calculate Risk", class = "btn-primary"),
       hr(),
       h5("Model Formula:"),
-      p("logit(P) = 6.622 - 0.026×Hb - 0.118×ALB", 
+      # 【修正】使用标准 Unicode 字符，避免乱码
+      p("logit(P) = 6.1723 − 0.0277 × Hb − 0.0984 × ALB", 
         style = "font-style:italic; color:gray;"),
       h5("Simplified Score:"),
       p("Hb: +1 point per 10 g/L decrease (from 130 g/L)"),
@@ -65,7 +66,7 @@ ui <- fluidPage(
       h3("Prediction Result"),
       tableOutput("result_table"),
       br(),
-      h4("Predicted Probability of Decompensation"),
+      h4("Estimated Probability of Decompensation"),
       textOutput("prob_text"),
       br(),
       h4("Risk Stratification"),
